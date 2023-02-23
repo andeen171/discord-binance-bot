@@ -1,25 +1,27 @@
-import datetime
-from typing import List
-from sqlalchemy import ForeignKey
-from sqlalchemy import func
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, func
+from sqlalchemy.orm import declarative_base, relationship
+
+Base = declarative_base()
 
 
-class Base(DeclarativeBase):
-    pass
+class Asset(Base):
+    __tablename__ = "assets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True)
+    symbol = Column(String, unique=True, index=True)
+    price = Column(Float, nullable=False)
+    trades = relationship("Trade", back_populates="asset")
 
 
-class B(Base):
-    __tablename__ = "b"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    a_id: Mapped[int] = mapped_column(ForeignKey("a.id"))
-    data: Mapped[str]
+class Trade(Base):
+    __tablename__ = "trades"
 
+    id = Column(Integer, primary_key=True, index=True)
+    asset_id = Column(Integer, ForeignKey("assets.id"), nullable=False)
+    type = Column(String, nullable=False)
+    price = Column(Float, nullable=False)
+    quantity = Column(Float, nullable=False)
+    created_at = Column(DateTime, nullable=False, default=func.now())
 
-class A(Base):
-    __tablename__ = "a"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    data: Mapped[str]
-    create_date: Mapped[datetime.datetime] = mapped_column(server_default=func.now())
-    bs: Mapped[List[B]] = relationship(lazy="raise")
+    asset = relationship("Asset", back_populates="trades")
